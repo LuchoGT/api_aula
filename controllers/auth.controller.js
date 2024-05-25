@@ -61,15 +61,13 @@ const createUser2 = async (req, res) => {
 
     const token = await generarJWT(usuario.id, usuario.name);
 
-    return res
-      .status(201)
-      .json({
-        msg: "User registered successfully",
-        uid: usuario.id,
-        name: usuario.name,
-        profile: profile || '',
-        token,
-      });
+    return res.status(201).json({
+      msg: "User registered successfully",
+      uid: usuario.id,
+      name: usuario.name,
+      profile: profile || "",
+      token,
+    });
   } catch (error) {
     // Manejo de errores
     res.status(500).json({
@@ -139,11 +137,11 @@ const revalidarToken = async (req, res = response) => {
 };
 
 // const getUser=(req,res)=>{
-    
+
 //   const { name } = req.params;
 
 //   try {
-      
+
 //       if(!name) return res.status(501).send({ error: "Invalid name"});
 
 //       Usuario.findOne({ name }, function(err, user){
@@ -167,25 +165,104 @@ const getUser = async (req, res) => {
   const { name } = req.params;
 
   try {
-      if (!name) {
-          return res.status(400).json({ error: "Invalid name" });
-      }
+    if (!name) {
+      return res.status(400).json({ error: "Invalid name" });
+    }
 
-      const user = await Usuario.findOne({ name });
-      if (!user) {
-          return res.status(404).json({ error: "Couldn't Find the User" });
-      }
+    const user = await Usuario.findOne({ name });
+    if (!user) {
+      return res.status(404).json({ error: "Couldn't Find the User" });
+    }
 
-      // Remover la contraseña del objeto usuario
-      const { password, ...rest } = user.toObject();
+    // Remover la contraseña del objeto usuario
+    const { password, ...rest } = user.toObject();
 
-      return res.status(200).json({
-        ok:"Usuario encontrado",
-        uid:user.id,
-        name:user.name,
-      });
+    return res.status(200).json({
+      ok: "Usuario encontrado",
+      uid: user.id,
+      name: user.name,
+    });
   } catch (error) {
-      return res.status(500).json({ error: "Cannot Find User Data" });
+    return res.status(500).json({ error: "Cannot Find User Data" });
+  }
+};
+
+const updateUser2 = async (req, res = response) => {
+ 
+  // const {id} = req.params;
+  // const body = req.body;
+
+  // res.json({
+  //   ok:true,
+  //   msg:"Update user",
+  //   data:body,
+  //   id,
+  // })
+
+  try {
+    const { userId } = req.user;
+
+    if (userId) {
+      const body = req.body;
+
+      // Actualizar los datos del usuario
+      Usuario.updateOne({ _id: userId }, body, async function (err, data) {
+        if (err) throw err;
+
+        // Generar un nuevo token JWT con los datos actualizados del usuario
+        const token = await generarJWT(userId, body.name); // Puedes ajustar los datos según lo que necesites
+
+        return res.status(201).send({ msg: "Record Updated...!", token });
+      });
+
+    } else {
+      return res.status(401).send({ error: "User Not Found...!" });
+    }
+
+  } catch (error) {
+    return res.status(401).send({ error });
+  }
+};
+
+const updateUser = async (req, res) => {
+  const { userId } = req.params; // Supongo que el userId se pasa como parámetro en la URL
+  const { name, password, profile, email } = req.body;
+
+  try {
+    // Verificar que el usuario exista
+    const user = await Usuario.findById(userId);
+    if (!user) {
+      return res.status(404).send({ error: 'Usuario no encontrado' });
+    }
+
+    // Actualizar los campos necesarios
+    if (name) {
+      user.name = name;
+    }
+    // if (password) {
+    //   const hashedPassword = await bcrypt.hash(password, 10);
+    //   user.password = hashedPassword;
+    // }
+    if (profile) {
+      user.profile = profile;
+    }
+    if (email) {
+      user.email = email;
+    }
+
+    // Guardar los cambios en la base de datos
+    await user.save();
+
+    // Generar un nuevo token JWT
+    const token = await generarJWT(user._id, user.name);
+
+    return res.status(200).send({
+      msg: 'Usuario actualizado exitosamente',
+      name: user.name,
+      token
+    });
+  } catch (error) {
+    return res.status(500).send({ error: 'Error al actualizar el usuario' });
   }
 };
 module.exports = {
@@ -193,5 +270,6 @@ module.exports = {
   loginUsuario,
   revalidarToken,
   createUser2,
-  getUser
+  getUser,
+  updateUser
 };

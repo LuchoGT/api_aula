@@ -5,6 +5,7 @@ const {
   loginUsuario,
   createUser2,
   getUser,
+  updateUser,
 } = require("../controllers/auth.controller");
 const { check } = require("express-validator");
 const { validarCampos } = require("../middlewares/validar-campos");
@@ -43,4 +44,7 @@ router.get("/renew", validatJWT, revalidarToken);
 
 router.get('/:name', getUser) // user with username
 
+
+// router.put('/updateuser/:id',updateUser)
+router.put('/:userId',updateUser)
 module.exports = router;
