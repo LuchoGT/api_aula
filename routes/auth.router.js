@@ -46,5 +46,5 @@ router.get('/:name', getUser) // user with username
 
 
 // router.put('/updateuser/:id',updateUser)
-router.put('/:userId',updateUser)
+router.put('/updateuser',updateUser)
 module.exports = router;
